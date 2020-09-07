@@ -1,0 +1,27 @@
+name: 'workflow-expectant'
+description: 'Wait for all needed workflows'
+inputs:
+  wait-interval:
+    description: 'Seconds to wait between checks'
+    required: true
+
+  wait-max:
+    description: 'Max seconds to wait all checks'
+    required: true
+
+  repo-token:
+    description: 'Token for github-api calls'
+    required: true
+
+  ref:
+    description: 'A git ref to be checked: branch/tag/commit sha. Defaults - current commit of started workflow'
+    required: false
+
+  no-work-break:
+    description: 'Break execution if no runned workflows'
+    required: false
+    default: false
+
+runs:
+  using: 'node12'
+  main: 'index.js'
