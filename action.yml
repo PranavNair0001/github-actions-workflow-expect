@@ -20,7 +20,7 @@ inputs:
   no-work-break:
     description: 'Break execution if no runned workflows'
     required: false
-    default: false
+    default: "false"
 
 runs:
   using: 'node12'

@@ -12,7 +12,10 @@ try {
     const waitMax = core.getInput('wait-max');
     const ref = core.getInput('ref', {required: false}) || context.sha;
     const token = core.getInput('repo-token');
-    const breakIfNoWork = core.getInput('no-work-break');
+    let breakIfNoWork = false;
+    switch (core.getInput('no-work-break').toLowerCase().trim()) {
+        case "true": case "yes": case "1": breakIfNoWork = true;
+    }
 
     const octokit = new Octokit({auth: token});
     const {owner, repo} = context.repo;
@@ -20,15 +23,15 @@ try {
     const queryCheckWorkflows = async function () {
         const {data: response} = await octokit.checks.listForRef({owner, repo, ref});
         if (response.total_count === 1) {
-            return STATUS_NO_WORK;
+            return [STATUS_NO_WORK, null];
         }
         let status = STATUS_SUCCESS;
         let objectWating = null;
         response.check_runs.forEach(checkRun => {
             if (checkRun.name !== context.job) {
+                objectWating = checkRun.name;
                 if (checkRun.status === 'in_progress' || checkRun.status === 'queued') {
                     status = STATUS_IN_PROGRESS;
-                    objectWating = checkRun.name;
                 }
                 if (['failure', 'cancelled', 'timed_out'].includes(checkRun.conclusion)) {
                     status = STATUS_ERROR;
@@ -47,15 +50,18 @@ try {
         try {
             console.log(`Starting checks for: ${owner} / ${repo} / ${ref}`);
             let executedTime = 0;
-            let [result, object] = await queryCheckWorkflows();
-            if (result === STATUS_NO_WORK) {
-                if (breakIfNoWork) {
-                    core.setFailed('There aren\'t checks for this ref, exiting...');
-                } else {
-                    result = STATUS_SUCCESS;
-                }
-            }
+            let result = '';
+            let object = null;
             while (result !== STATUS_SUCCESS) {
+                [result, object] = await queryCheckWorkflows();
+                if (result === STATUS_NO_WORK) {
+                    if (breakIfNoWork === true) {
+                        core.setFailed(`There aren't checks for this ref, exiting...`);
+                    } else {
+                        console.log(`There aren't checks for this ref, pass...`)
+                    }
+                    break;
+                }
                 if (executedTime > waitMax) {
                     core.setFailed('Time exceed max limit (' + waitMax + '), stopping...');
                     break;
@@ -63,9 +69,10 @@ try {
                 console.log(`Workflow ${object} still in progress, will check for ${waitInterval} seconds...`);
                 await sleep(waitInterval);
                 executedTime += waitInterval;
-                [result, object] = await queryCheckWorkflows();
             }
-            console.log('All checks were passed.');
+            if (result === STATUS_SUCCESS) {
+                console.log('All checks were passed.');
+            }
         } catch (error) {
             core.setFailed(error.message);
         }
