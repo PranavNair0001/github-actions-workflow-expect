@@ -61,6 +61,9 @@ try {
                         console.log(`There aren't checks for this ref, pass...`)
                     }
                     break;
+                } else if (result === STATUS_ERROR) {
+                    core.setFailed(`Workflow ${object} ended with error, exiting...`);
+                    break;
                 }
                 if (executedTime > waitMax) {
                     core.setFailed('Time exceed max limit (' + waitMax + '), stopping...');
