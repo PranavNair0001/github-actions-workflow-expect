@@ -28,7 +28,7 @@ This action waits on other workflows for selected git-ref to complete. Used for 
 
 ## Example usage
 ```yaml
-uses: vahidov/github-actions-workflow-expect@v1
+uses: ScrumWorks/github-actions-workflow-expect@v1
 with:
     wait-interval: 10 # seconds
     wait-max: 1800 # seconds
