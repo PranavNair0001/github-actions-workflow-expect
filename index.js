@@ -11,6 +11,7 @@ try {
     const waitInterval = parseInt(core.getInput('wait-interval'));
     const waitMax = parseInt(core.getInput('wait-max'));
     const ref = core.getInput('ref', {required: false}) || context.sha;
+    const workflow = core.getInput('workflow');
     const token = core.getInput('repo-token');
     let breakIfNoWork = false;
     const BreakException = {};
@@ -30,16 +31,20 @@ try {
         let jobName = null;
         try {
             response.check_runs.forEach(checkRun => {
-                if (checkRun.name !== context.job) {
-                    if (checkRun.status === 'in_progress' || checkRun.status === 'queued') {
-                        jobName = checkRun.name;
-                        status = STATUS_IN_PROGRESS;
-                        throw BreakException;
-                    }
-                    if (['failure', 'cancelled', 'timed_out'].includes(checkRun.conclusion)) {
-                        jobName = checkRun.name;
-                        status = STATUS_ERROR;
-                        throw BreakException;
+                if (checkRun.name === workflow) {
+                    if (checkRun.name !== context.job) {
+                        if (checkRun.status === 'in_progress' || checkRun.status
+                            === 'queued') {
+                            jobName = checkRun.name;
+                            status = STATUS_IN_PROGRESS;
+                            throw BreakException;
+                        }
+                        if (['failure', 'cancelled', 'timed_out'].includes(
+                            checkRun.conclusion)) {
+                            jobName = checkRun.name;
+                            status = STATUS_ERROR;
+                            throw BreakException;
+                        }
                     }
                 }
             })

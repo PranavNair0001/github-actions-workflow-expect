@@ -13,6 +13,10 @@ inputs:
     description: 'Token for github-api calls'
     required: true
 
+  workflow:
+    description: 'Workflow which needs to be waited for'
+    required: true
+
   ref:
     description: 'A git ref to be checked: branch/tag/commit sha. Defaults - current commit of started workflow'
     required: false
