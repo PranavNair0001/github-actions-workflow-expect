@@ -30,7 +30,9 @@ try {
         let status = STATUS_SUCCESS;
         let jobName = null;
         try {
+            core.info(workflow);
             response.check_runs.forEach(checkRun => {
+                core.info(checkRun.name);
                 if (checkRun.name === workflow) {
                     if (checkRun.name !== context.job) {
                         if (checkRun.status === 'in_progress' || checkRun.status
